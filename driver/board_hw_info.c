@@ -443,7 +443,7 @@ static unsigned int set_default_sn(void)
 	unsigned int vendor_dm = 0;
 	unsigned int vendor_ek = 0;
 
-#if defined(CONFIG_AT91SAM9X5EK)
+#if defined(CONFIG_AT91SAM9X5EK) || defined(CONFIG_SAM9X5_CM)
 	/* at91sam9x5ek
 	 * CPU Module: SAM9X25-CM, EMBEST
 	 * Display Module: SAM9x5-DM, FLEX
@@ -452,11 +452,11 @@ static unsigned int set_default_sn(void)
 	board_id_cm = BOARD_ID_SAM9X25_CM;
 	board_id_dm = BOARD_ID_SAM9x5_DM;
 	board_id_ek = BOARD_ID_SAM9X5_EK;
-	vendor_cm = VENDOR_EMBEST;
+	vendor_cm = VENDOR_RONETIX;
 	vendor_dm = VENDOR_FLEX;
 	vendor_ek = VENDOR_FLEX;
 
-#elif defined(CONFIG_SAMA5D3XEK) || defined(CONFIG_SAMA5D3X_CMP)
+#elif defined(CONFIG_SAMA5D3XEK) || defined(CONFIG_SAMA5D3X_CMP) || defined(CONFIG_SAMA5D3X_CM)
 
 	/* sama5d3xek
 	 * CPU Module: SAMA5D31-CM, EMBEST
@@ -466,7 +466,7 @@ static unsigned int set_default_sn(void)
 	board_id_cm = BOARD_ID_SAMA5D31_CM;
 	board_id_dm = BOARD_ID_SAMA5D3X_DM;
 	board_id_ek = BOARD_ID_SAMA5D3X_MB;
-	vendor_cm = VENDOR_EMBEST;
+	vendor_cm = VENDOR_RONETIX;
 	vendor_dm = VENDOR_FLEX;
 	vendor_ek = VENDOR_FLEX;
 #elif defined(CONFIG_SAMA5D4EK) || defined(CONFIG_SAMA5D4_XPLAINED)
@@ -511,7 +511,7 @@ static unsigned int set_default_rev(void)
 	unsigned int rev_id_dm;
 	unsigned int rev_id_ek;
 
-#if defined(CONFIG_AT91SAM9X5EK)
+#if defined(CONFIG_AT91SAM9X5EK) || defined(CONFIG_SAM9X5_CM)
 	/* at91sam9x5ek
 	 * CPU Module: 'B', '1'
 	 * Display Module: 'B', '0'
@@ -524,7 +524,7 @@ static unsigned int set_default_rev(void)
 	rev_id_dm = '0';
 	rev_id_ek = '0';
 
-#elif defined(CONFIG_SAMA5D3XEK) || defined(CONFIG_SAMA5D3X_CMP)
+#elif defined(CONFIG_SAMA5D3XEK) || defined(CONFIG_SAMA5D3X_CMP) || defined(CONFIG_SAMA5D3X_CM)
 
 	/* sama5d3xek
 	 * CPU Module: 'D', '4'
@@ -646,7 +646,7 @@ static int load_1wire_info(unsigned char *buff, unsigned int size,
 	board_info_t *bd_info = &board_info;
 	unsigned int count;
 	unsigned int parsing = 0;
-	int i;
+	int i, num_cm_found = 0;;
 
 	memset(bd_info, 0, sizeof(*bd_info));
 
@@ -677,10 +677,13 @@ static int load_1wire_info(unsigned char *buff, unsigned int size,
 		if (construct_sn_rev(bd_info, psn, prev))
 			continue;
 
+		if (bd_info->board_type == BOARD_TYPE_CPU)
+			num_cm_found++;
+
 		parsing++;
 	}
 
-	if (!parsing)
+	if (!parsing || (num_cm_found != 1))
 		return -1;
 
 	return 0;
