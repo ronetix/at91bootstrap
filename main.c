@@ -36,6 +36,7 @@
 #include "backup.h"
 #include "secure.h"
 #include "sfr_aicredir.h"
+#include "debug.h"
 
 #ifdef CONFIG_HW_DISPLAY_BANNER
 static void display_banner (void)
@@ -43,6 +44,49 @@ static void display_banner (void)
 	usart_puts(BANNER);
 }
 #endif
+
+/*!
+ * @brief Perform memory test
+ * @param addr
+ * @param len
+ * @return
+ */
+static int mem_test(uint8_t *addr, int len)
+{
+	int i;
+	uint32_t *p = (uint32_t *)addr;
+
+	dbg_info("MEMTEST: start %x, length %x ... ", (uint32_t)addr, len);
+
+	len /= 4;		/* convert to double words */
+
+	for (i = 0; i < len; i++)
+		*p++ = i;
+
+	p = (uint32_t *)addr;
+	for (i = 0; i < len; i++)
+		if (*p++ != i)
+		{
+			dbg_info("failed at %x\n", (uint32_t)p);
+			return 1;
+		}
+
+	p = (uint32_t *)addr;
+	for (i = 0; i < len; i++)
+		*p++ = 0xFFFFFFFF - i;
+
+	p = (uint32_t *)addr;
+	for (i = 0; i < len; i++)
+		if (*p++ != 0xFFFFFFFF - i)
+		{
+			dbg_info("failed at %x\n", (uint32_t)p);
+			return 1;
+		}
+
+
+	dbg_info("done\n");
+	return 0;
+}
 
 int main(void)
 {
@@ -111,6 +155,9 @@ int main(void)
 #if defined(CONFIG_SECURE)
 	image.dest -= sizeof(at91_secure_header_t);
 #endif
+
+	ret = mem_test(image.dest, image.length);
+	while (ret);
 
 	ret = (*load_image)(&image);
 
