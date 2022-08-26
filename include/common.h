@@ -36,6 +36,10 @@
 #define min(a, b)	(((a) < (b)) ? (a) : (b))
 #define max(a, b)	(((a) > (b)) ? (a) : (b))
 
+typedef unsigned int   uint32_t;
+typedef unsigned short uint16_t;
+typedef unsigned char  uint8_t;
+
 #ifndef NULL
 #define	NULL	0
 #endif
