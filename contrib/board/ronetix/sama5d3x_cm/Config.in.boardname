@@ -1,0 +1,2 @@
+config BOARDNAME
+	default "sama5d3x_cm"	if SAMA5D3X_CM

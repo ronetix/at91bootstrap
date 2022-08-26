@@ -1,0 +1,2 @@
+config BOARDNAME
+	default "sam9x5_cm"	if SAM9X5_CM

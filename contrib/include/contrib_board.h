@@ -69,4 +69,16 @@
 #include "sama5d3_linea.h"
 #endif
 
+#ifdef CONFIG_PM9G45
+#include "pm9g45.h"
+#endif
+
+#ifdef CONFIG_SAM9X5_CM
+#include "sam9x5_cm.h"
+#endif
+
+#ifdef CONFIG_SAMA5D3X_CM
+#include "sama5d3x_cm.h"
+#endif
+
 #endif

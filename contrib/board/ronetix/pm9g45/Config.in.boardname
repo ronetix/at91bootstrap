@@ -1,0 +1,2 @@
+config BOARDNAME
+	default "pm9g45"	if PM9G45
