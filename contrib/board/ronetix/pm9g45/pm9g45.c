@@ -168,21 +168,28 @@ void hw_init(void)
 	at91_disable_wdt();
 
 	/*
-	 * At this stage the main oscillator
-	 * is supposed to be enabled PCK = MCK = MOSC
+	 * At this stage the main oscillator is
+	 * supposed to be enabled PCK = MCK = MOSC
 	 */
-	pmc_init_pll(0);
+	if (clock_already_done() == false)
+	{
+		/*
+		 * At this stage the main oscillator
+		 * is supposed to be enabled PCK = MCK = MOSC
+		 */
+		pmc_init_pll(0);
 
-	/* Configure PLLA = MOSC * (PLL_MULA + 1) / PLL_DIVA */
-	pmc_cfg_plla(PLLA_SETTINGS);
+		/* Configure PLLA = MOSC * (PLL_MULA + 1) / PLL_DIVA */
+		pmc_cfg_plla(PLLA_SETTINGS);
 
-	/* Switch PCK/MCK on Main clock output */
-	pmc_mck_cfg_set(0, BOARD_PRESCALER_MAIN_CLOCK,
-			AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+		/* Switch PCK/MCK on Main clock output */
+		pmc_mck_cfg_set(0, BOARD_PRESCALER_MAIN_CLOCK,
+				AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
 
-	/* Switch PCK/MCK on PLLA output */
-	pmc_mck_cfg_set(0, BOARD_PRESCALER_PLLA,
-			AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+		/* Switch PCK/MCK on PLLA output */
+		pmc_mck_cfg_set(0, BOARD_PRESCALER_PLLA,
+				AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+	}
 
 	/* Enable External Reset */
 	writel(AT91C_RSTC_KEY_UNLOCK | AT91C_RSTC_URSTEN, AT91C_BASE_RSTC + RSTC_RMR);
