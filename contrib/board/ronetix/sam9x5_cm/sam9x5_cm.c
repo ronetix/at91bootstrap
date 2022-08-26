@@ -168,18 +168,21 @@ void hw_init(void)
 	 * At this stage the main oscillator is
 	 * supposed to be enabled PCK = MCK = MOSC
 	 */
-	pmc_init_pll(0);
+	if (clock_already_done() == false)
+	{
+		pmc_init_pll(0);
 
-	/* Configure PLLA = MOSC * (PLL_MULA + 1) / PLL_DIVA */
-	pmc_cfg_plla(PLLA_SETTINGS);
+		/* Configure PLLA = MOSC * (PLL_MULA + 1) / PLL_DIVA */
+		pmc_cfg_plla(PLLA_SETTINGS);
 
-	/* Switch PCK/MCK on Main clock output */
-	pmc_mck_cfg_set(0, BOARD_PRESCALER_MAIN_CLOCK,
-			AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+		/* Switch PCK/MCK on Main clock output */
+		pmc_mck_cfg_set(0, BOARD_PRESCALER_MAIN_CLOCK,
+				AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
 
-	/* Switch PCK/MCK on PLLA output */
-	pmc_mck_cfg_set(0, BOARD_PRESCALER_PLLA,
-			AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+		/* Switch PCK/MCK on PLLA output */
+		pmc_mck_cfg_set(0, BOARD_PRESCALER_PLLA,
+				AT91C_PMC_PLLADIV2 | AT91C_PMC_MDIV | AT91C_PMC_CSS);
+	}
 
 	/* Enable External Reset */
 	writel(AT91C_RSTC_KEY_UNLOCK | AT91C_RSTC_URSTEN, AT91C_BASE_RSTC + RSTC_RMR);
@@ -289,21 +292,9 @@ void nandflash_hw_init(void)
 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
 	};
 
-	const struct pio_desc nand_pins_lo[] = {
-		{"NANDOE",	CONFIG_SYS_NAND_OE_PIN,		0, PIO_PULLUP, PIO_PERIPH_A},
-		{"NANDWE",	CONFIG_SYS_NAND_WE_PIN,		0, PIO_PULLUP, PIO_PERIPH_A},
-		{"NANDALE",	CONFIG_SYS_NAND_ALE_PIN,	0, PIO_PULLUP, PIO_PERIPH_A},
-		{"NANDCLE",	CONFIG_SYS_NAND_CLE_PIN,	0, PIO_PULLUP, PIO_PERIPH_A},
-		{"NANDCS", 	CONFIG_SYS_NAND_ENABLE_PIN,	1, PIO_PULLUP, PIO_OUTPUT},
-		{(char *)0,	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
-	};
-
 	reg = readl(AT91C_BASE_CCFG + CCFG_EBICSA);
 	reg |= AT91C_EBI_CS3A_SM;
-	if (get_cm_rev() == 'A')
-		reg &= ~AT91C_EBI_NFD0_ON_D16;
-	else
-		reg |= (AT91C_EBI_DDR_MP_EN | AT91C_EBI_NFD0_ON_D16);
+	reg |= (AT91C_EBI_DDR_MP_EN | AT91C_EBI_NFD0_ON_D16);
 
 	reg &= ~AT91C_EBI_DRV;
 	writel(reg, AT91C_BASE_CCFG + CCFG_EBICSA);
@@ -333,10 +324,7 @@ void nandflash_hw_init(void)
 		AT91C_BASE_SMC + SMC_CTRL3);
 
 	/* Configure the PIO controller */
-	if (get_cm_rev() == 'A')
-		pio_configure(nand_pins_lo);
-	else
-		pio_configure(nand_pins_hi);
+	pio_configure(nand_pins_hi);
 
 	pmc_enable_periph_clock(AT91C_ID_PIOC_D, PMC_PERIPH_CLK_DIVIDER_NA);
 }
