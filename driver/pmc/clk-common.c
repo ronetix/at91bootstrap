@@ -35,9 +35,25 @@
 #include "debug.h"
 #include "pmc.h"
 
+/*!
+ * @brief check if already initialized by JTAG Emulator
+ *
+ * @return true if CPU clock is already initialized
+ */
+int clock_already_done(void)
+{
+	unsigned long tmp;
+
+	tmp = read_pmc(PMC_MCKR);
+	return (tmp == PMC_MCKR_EMULATOR);
+}
+
 void lowlevel_clock_init()
 {
 	unsigned long tmp;
+
+	if (clock_already_done())
+			return;
 
 	/*
 	 * Switch the master clock to the slow clock without modifying other

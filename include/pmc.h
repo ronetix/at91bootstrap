@@ -72,6 +72,7 @@ struct pmc_pll_cfg {
 	unsigned int acr;
 };
 
+extern int clock_already_done(void);
 extern void pmc_init_pll(unsigned int pmc_pllicpr);
 extern int pmc_cfg_plla(unsigned int pmc_pllar);
 extern void pmc_sam9x60_cfg_pll(unsigned int pll_id, struct pmc_pll_cfg *cfg);
