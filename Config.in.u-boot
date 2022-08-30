@@ -1,6 +1,13 @@
 menu "U-Boot Image Storage Setup"
 	depends on LOAD_UBOOT
 
+config REDUNDANT_IMAGES
+	bool "Use U-Boot redundant images"
+	default n
+	help
+	  A few extra images can be checked and loaded if the primary one
+	  and the rest redunant images are bad. This is for redundancy.
+
 config IMG_ADDRESS
 	string "Flash Offset for U-Boot"
 	depends on DATAFLASH || FLASH || NANDFLASH
@@ -16,6 +23,24 @@ config IMG_SIZE
 	default	"0x000a0000"
 	help
 	  at91bootstrap will copy this size of U-Boot image
+
+config IMG_1_ADDRESS
+	string "Flash Offset for U-Boot"
+	depends on REDUNDANT_IMAGES
+	default "0x00088000" if CONFIG_FLASH
+	default "0x00088000" if CONFIG_DATAFLASH
+	default "0x000c0000" if CONFIG_NANDFLASH
+	default	"0x000c0000" if CONFIG_SDCARD
+	help
+
+config IMG_2_ADDRESS
+	string "Flash Offset for U-Boot"
+	depends on REDUNDANT_IMAGES
+	default "0x00108000" if CONFIG_FLASH
+	default "0x00108000" if CONFIG_DATAFLASH
+	default "0x00140000" if CONFIG_NANDFLASH
+	default	"0x00140000" if CONFIG_SDCARD
+	help
 
 config JUMP_ADDR
 	string "The External Ram Address to Load U-Boot Image"

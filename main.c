@@ -25,6 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "autoconf.h"
 #include "common.h"
 #include "board.h"
 #include "usart.h"
@@ -45,12 +46,32 @@ static void display_banner (void)
 }
 #endif
 
-/*!
- * @brief Perform memory test
- * @param addr
- * @param len
- * @return
- */
+struct image_info boot_images[] =
+{
+	{
+		.offset = IMG_ADDRESS,
+		.length = IMG_SIZE,
+		.dest = (unsigned char *)JUMP_ADDR
+	},
+#ifdef CONFIG_REDUNDANT_IMAGES
+	{
+		.offset = IMG_1_ADDRESS,
+		.length = IMG_SIZE,
+		.dest = (unsigned char *)JUMP_ADDR
+	},
+	{
+		.offset = IMG_2_ADDRESS,
+		.length = IMG_SIZE,
+		.dest = (unsigned char *)JUMP_ADDR
+	},
+#endif
+	{
+		.length = 0
+	}
+};
+
+#define NUM_IMAGES	(sizeof(boot_images) / sizeof(boot_images[0]))
+
 static int mem_test(uint8_t *addr, int len)
 {
 	int i;
@@ -82,7 +103,6 @@ static int mem_test(uint8_t *addr, int len)
 			dbg_info("failed at %x\n", (uint32_t)p);
 			return 1;
 		}
-
 
 	dbg_info("done\n");
 	return 0;
@@ -156,10 +176,19 @@ int main(void)
 	image.dest -= sizeof(at91_secure_header_t);
 #endif
 
-	ret = mem_test(image.dest, image.length);
+	/* test destination memory */
+	ret = mem_test((uint8_t *)JUMP_ADDR, IMG_SIZE);
 	while (ret);
 
-	ret = (*load_image)(&image);
+	struct image_info *img = boot_images;
+	do {
+
+#if defined(CONFIG_SECURE)
+		img->dest -= sizeof(at91_secure_header_t);
+#endif
+		ret = (*load_image)(img);
+
+	} while (ret && ((++img)->length));
 
 #if defined(CONFIG_SECURE)
 	if (!ret)
@@ -168,6 +197,7 @@ int main(void)
 #endif
 
 #endif
+
 	load_image_done(ret);
 
 #ifdef CONFIG_SCLK

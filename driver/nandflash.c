@@ -25,6 +25,7 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "autoconf.h"
 #include "common.h"
 #include "hardware.h"
 #include "board.h"
@@ -444,10 +445,10 @@ static int nandflash_detect_onfi(struct nand_chip *chip)
 
 	nand_command(CMD_READ_ONFI);
 	nand_address(0x00);
-	
+
 	nand_wait_ready();
 	nand_command(CMD_READ_1);
-	
+
 	for (i = 0; i < 3; i++) {
 		param = onfi_params;
 		/* Read the onfi parameter table */
@@ -679,7 +680,7 @@ static int nand_read_status(void)
 }
 
 #ifdef CONFIG_NANDFLASH_SMALL_BLOCKS
-static int nand_read_sector(struct nand_info *nand, 
+static int nand_read_sector(struct nand_info *nand,
 			unsigned int row_address,
 			unsigned char *buffer,
 			unsigned int zone_flag)
@@ -745,7 +746,7 @@ static int nand_read_sector(struct nand_info *nand,
 #else /* large blocks */
 static int nand_read_sector(struct nand_info *nand,
 				unsigned int row_address,
-				unsigned char *buffer, 
+				unsigned char *buffer,
 				unsigned int zone_flag)
 {
 	unsigned int readbytes, i;
@@ -1076,6 +1077,26 @@ int load_nandflash(struct image_info *image)
 	ret = nand_loadimage(&nand, image->offset, image->length, image->dest);
 	if (ret)
 		return ret;
+
+#ifdef CONFIG_REDUNDANT_IMAGES
+	uint32_t crc32 (uint32_t crc, const uint8_t *p, int len);
+
+	/* calculate CRC32 */
+	uint32_t crc = crc32(0, image->dest, image->length - 4);
+
+	/* read CRC - last 4 bytes */
+	uint32_t *p = (uint32_t *)(image->dest + image->length - 4);
+	uint32_t read_crc = swap_uint32(*p);
+
+	if (crc != read_crc)
+	{
+		dbg_info("NAND: CRC32 checksum doesn't match\n");
+		dbg_info("NAND: calculated = %x, read = %x\n\n", crc, read_crc);
+		return -1;
+	}
+
+	dbg_info("NAND: CRC32 checksum OK\n");
+#endif
 
 #ifdef CONFIG_OF_LIBFDT
 	length = update_image_length(&nand,

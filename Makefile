@@ -160,6 +160,11 @@ MEM_BANK2 := $(strip $(subst ",,$(CONFIG_MEM_BANK2)))
 LINUX_KERNEL_ARG_STRING := $(strip $(subst ",,$(CONFIG_LINUX_KERNEL_ARG_STRING)))
 LINUX_KERNEL_ARG_STRING_FILE := $(strip $(subst ",,$(CONFIG_LINUX_KERNEL_ARG_STRING_FILE)))
 
+ifeq ($(CONFIG_REDUNDANT_IMAGES), y)
+IMG_1_ADDRESS := $(strip $(subst ",,$(CONFIG_IMG_1_ADDRESS)))
+IMG_2_ADDRESS := $(strip $(subst ",,$(CONFIG_IMG_2_ADDRESS)))
+endif
+
 # Board definitions
 BOARDNAME:=$(strip $(subst ",,$(CONFIG_BOARDNAME)))
 
