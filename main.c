@@ -51,7 +51,12 @@ struct image_info boot_images[] =
 	{
 		.offset = IMG_ADDRESS,
 		.length = IMG_SIZE,
-		.dest = (unsigned char *)JUMP_ADDR
+		.dest = (unsigned char *)JUMP_ADDR,
+
+#ifdef CONFIG_OF_LIBFDT
+		.of_offset = OF_OFFSET,
+		.of_dest = (unsigned char *)OF_ADDRESS,
+#endif
 	},
 #ifdef CONFIG_REDUNDANT_IMAGES
 	{

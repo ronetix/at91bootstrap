@@ -183,7 +183,7 @@ static int of_get_token_nextoffset(void *blob,
 			cell++;
 			offset++;
 		} while (*cell != '\0');
-		/* the \0 is part of the node name, hence offset must be updated to the 
+		/* the \0 is part of the node name, hence offset must be updated to the
 		* position past the \0.
 		*/
 		++offset;
@@ -276,8 +276,7 @@ static int of_get_node_offset(void *blob, const char *name, int *offset)
 			return -1;
 
 		nodename = (char *)of_dt_struct_offset(blob,(nodeoffset + 4));
-		if ((memcmp(nodename, name, namelen) == 0)
-			&& (nodename[namelen] == '\0'))
+		if (memcmp(nodename, name, namelen) == 0)
 			break;
 
 		start_offset = nextoffset;
