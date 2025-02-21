@@ -39,6 +39,8 @@
 #include "sfr_aicredir.h"
 #include "debug.h"
 
+extern uint32_t crc32 (uint32_t crc, const uint8_t *p, int len);
+
 #ifdef CONFIG_HW_DISPLAY_BANNER
 static void display_banner (void)
 {
@@ -79,8 +81,9 @@ struct image_info boot_images[] =
 
 static int mem_test(uint8_t *addr, int len)
 {
-	int i;
+	int i, l = len;
 	uint32_t *p = (uint32_t *)addr;
+	uint32_t crc1, crc2;
 
 	dbg_info("MEMTEST: start %x, length %x ... ", (uint32_t)addr, len);
 
@@ -88,6 +91,8 @@ static int mem_test(uint8_t *addr, int len)
 
 	for (i = 0; i < len; i++)
 		*p++ = i;
+
+	crc1 = crc32(0, (const uint8_t *)addr, l);
 
 	p = (uint32_t *)addr;
 	for (i = 0; i < len; i++)
@@ -97,9 +102,18 @@ static int mem_test(uint8_t *addr, int len)
 			return 1;
 		}
 
+	crc2 = crc32(0, (const uint8_t *)addr, l);
+	if (crc1 != crc2)
+	{
+		dbg_info("CRC32 check failed (1)\n");
+		return 1;
+	}
+
 	p = (uint32_t *)addr;
 	for (i = 0; i < len; i++)
 		*p++ = 0xFFFFFFFF - i;
+
+	crc1 = crc32(0, (const uint8_t *)addr, l);
 
 	p = (uint32_t *)addr;
 	for (i = 0; i < len; i++)
@@ -108,6 +122,13 @@ static int mem_test(uint8_t *addr, int len)
 			dbg_info("failed at %x\n", (uint32_t)p);
 			return 1;
 		}
+
+	crc2 = crc32(0, (const uint8_t *)addr, l);
+	if (crc1 != crc2)
+	{
+		dbg_info("CRC32 check failed (2)\n");
+		return 1;
+	}
 
 	dbg_info("done\n");
 	return 0;
@@ -220,6 +241,8 @@ int main(void)
 #endif
 
 #if !defined(CONFIG_LOAD_NONE)
+	dbg_info("NAND: jump to %x\n", (uint32_t)JUMP_ADDR);
+
 	return JUMP_ADDR;
 #else
 	return 0;
