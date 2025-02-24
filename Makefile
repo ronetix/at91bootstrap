@@ -232,7 +232,7 @@ ifeq ($(IMAGE),)
 IMAGE=$(BOOT_NAME).bin
 endif
 
-COBJS-y:= main.o
+COBJS-y:= main.o tools.o
 SOBJS-y:= crt0_gnu.o
 
 # Verify that BOARDNAME is the name of a subdirectory of board/

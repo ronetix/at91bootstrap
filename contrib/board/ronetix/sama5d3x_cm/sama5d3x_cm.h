@@ -240,4 +240,6 @@
  */
 #define CONFIG_SYS_ONE_WIRE_PIN		AT91C_PIN_PE(25)
 
+extern int board_gpio_test(void);
+
 #endif /* #ifndef __SAMA5EK_H__ */

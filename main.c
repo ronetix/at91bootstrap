@@ -38,8 +38,7 @@
 #include "secure.h"
 #include "sfr_aicredir.h"
 #include "debug.h"
-
-extern uint32_t crc32 (uint32_t crc, const uint8_t *p, int len);
+#include <tools.h>
 
 #ifdef CONFIG_HW_DISPLAY_BANNER
 static void display_banner (void)
@@ -78,61 +77,6 @@ struct image_info boot_images[] =
 };
 
 #define NUM_IMAGES	(sizeof(boot_images) / sizeof(boot_images[0]))
-
-static int mem_test(uint8_t *addr, int len)
-{
-	int i, l = len;
-	uint32_t *p = (uint32_t *)addr;
-	uint32_t crc1, crc2;
-
-	dbg_info("MEMTEST: start %x, length %x ... ", (uint32_t)addr, len);
-
-	len /= 4;		/* convert to double words */
-
-	for (i = 0; i < len; i++)
-		*p++ = i;
-
-	crc1 = crc32(0, (const uint8_t *)addr, l);
-
-	p = (uint32_t *)addr;
-	for (i = 0; i < len; i++)
-		if (*p++ != i)
-		{
-			dbg_info("failed at %x\n", (uint32_t)p);
-			return 1;
-		}
-
-	crc2 = crc32(0, (const uint8_t *)addr, l);
-	if (crc1 != crc2)
-	{
-		dbg_info("CRC32 check failed (1)\n");
-		return 1;
-	}
-
-	p = (uint32_t *)addr;
-	for (i = 0; i < len; i++)
-		*p++ = 0xFFFFFFFF - i;
-
-	crc1 = crc32(0, (const uint8_t *)addr, l);
-
-	p = (uint32_t *)addr;
-	for (i = 0; i < len; i++)
-		if (*p++ != 0xFFFFFFFF - i)
-		{
-			dbg_info("failed at %x\n", (uint32_t)p);
-			return 1;
-		}
-
-	crc2 = crc32(0, (const uint8_t *)addr, l);
-	if (crc1 != crc2)
-	{
-		dbg_info("CRC32 check failed (2)\n");
-		return 1;
-	}
-
-	dbg_info("done\n");
-	return 0;
-}
 
 int main(void)
 {
@@ -202,9 +146,22 @@ int main(void)
 	image.dest -= sizeof(at91_secure_header_t);
 #endif
 
+#ifdef CONFIG_GPIO_TEST
+	ret = board_gpio_test();
+	if (ret)
+	{
+		dbg_info("halt\n");
+		while (1);
+	}
+#endif
+
 	/* test destination memory */
 	ret = mem_test((uint8_t *)JUMP_ADDR, IMG_SIZE);
-	while (ret);
+	if (ret)
+	{
+		dbg_info("halt\n");
+		while (1);
+	}
 
 	struct image_info *img = boot_images;
 	do {
@@ -226,6 +183,10 @@ int main(void)
 
 	load_image_done(ret);
 
+#if !defined(CONFIG_LOAD_NONE)
+	dbg_info("NAND: jump to %x\n", (uint32_t)JUMP_ADDR);
+#endif
+
 #ifdef CONFIG_SCLK
 #ifdef CONFIG_SCLK_BYPASS
 	slowclk_switch_osc32_bypass();
@@ -241,8 +202,6 @@ int main(void)
 #endif
 
 #if !defined(CONFIG_LOAD_NONE)
-	dbg_info("NAND: jump to %x\n", (uint32_t)JUMP_ADDR);
-
 	return JUMP_ADDR;
 #else
 	return 0;
