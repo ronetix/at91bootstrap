@@ -27,6 +27,8 @@ def pmecchead(dot_config_path, binaries_path):
             pmecc_word = pmecc_head.gen_pmecc_header(4096, 224, 8, 512)
         elif find_in_file(dot_config_path, "CONFIG_AT91SAM9X5EK=y"):
             pmecc_word = pmecc_head.gen_pmecc_header(2048, 64, 2, 512)
+        elif find_in_file(dot_config_path, "CONFIG_SAM9X5_CM=y"):
+            pmecc_word = pmecc_head.gen_pmecc_header(2048, 64, 2, 512)
         elif find_in_file(dot_config_path, "CONFIG_AT91SAM9N12EK=y"):
             pmecc_word = pmecc_head.gen_pmecc_header(2048, 64, 2, 512)
         elif find_in_file(dot_config_path, "CONFIG_SAM9X60EK=y"):
